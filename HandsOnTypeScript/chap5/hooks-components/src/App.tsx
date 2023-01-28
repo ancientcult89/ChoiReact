@@ -1,7 +1,8 @@
-import React, { useReducer } from 'react';
+import React, { useCallback, useEffect, useReducer, useState } from 'react';
 import './App.css';
 import logo from './logo.svg';
 import Greeting from './GreetingFunctional';
+import ListCreator, { ListItem } from './ListCreator';
 
 const reducer = (state: any, action: any) => {
   console.log("enteredNameReducer");
@@ -26,19 +27,62 @@ const initialState = {
 function App() {
   const [{message, enteredName}, dispatch] = useReducer(reducer, initialState);
 
-  const onChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch ({type: "enteredName", payload: e.target.value});
-    dispatch ({type: "message", payload: e.target.value});
+  const [startCount, setStartCount] = useState(0);
+  const [count, setCount] = useState(0);
+
+  const setCountCallback = useCallback(() => {
+    const inc = count + 1 > startCount ? count + 1 : Number(count + 1) + startCount;
+    setCount(inc);
+  }, [count, startCount]);
+
+  const [listItems, setListItems] = useState<Array<ListItem>>();
+
+  useEffect(() => {
+    const li = [];
+    for(let i=0; i<count; i++)
+    {
+      li.push({id: i});
+    }
+    setListItems(li);
+  }, [count]);
+
+  const onWelcomeBtnClick = () => {
+    setCountCallback();
   }
+
+  const onChangeStartCount = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartCount(Number(e.target.value));
+  }
+
+  console.log("App.tsx render")
 
   return (
       <div className='App'>
         <header className='App-header'>
         <img src={logo} className="App-logo" alt="logo"
         />
-        <input value={enteredName}
-        onChange={onChangeName} />
-        <Greeting message={message} />
+        <Greeting 
+          message={message} 
+          enteredName={enteredName}
+          greetingDispatcher={dispatch}
+        />
+        <div style={{marginTop: '10px'}}>
+          <label>
+              Enter a number and we.ll increment it
+          </label>
+          <br></br>
+          <input 
+            value={startCount} 
+            onChange={onChangeStartCount}
+            style={{width: '.75rem'}}
+          />
+          <label>{count}</label>
+          <br/>
+          <button onClick={onWelcomeBtnClick}>Increment count</button>
+        </div>
+        <div>
+          <ListCreator listItems={listItems}></ListCreator>
+        </div>
         </header>
       </div>
   )
